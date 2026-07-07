@@ -277,7 +277,7 @@ footer .legal{margin-top:64px;font-size:14px;color:var(--color-surface-50)}
 </head>
 <body>
 
-<div class="banner">bakup is free to use &amp; fully self-hosted — <a href="https://github.com/kobraop9517/bakup-releases/releases/latest">get the latest release&nbsp;→</a></div>
+<div class="banner">bakup is free to use &amp; fully self-hosted — <a href="https://github.com/RamizMohammad/backup-release/releases/latest">get the latest release&nbsp;→</a></div>
 
 <nav><div class="wrap">
   <a class="wordmark" href="#">bakup<span style="font-size:14px;vertical-align:super">®</span></a>
@@ -289,7 +289,7 @@ footer .legal{margin-top:64px;font-size:14px;color:var(--color-surface-50)}
     <a class="c-text" href="#requirements">Requirements</a>
   </div>
   <span class="spacer"></span>
-  <a class="pill sm ghpill" href="https://github.com/kobraop9517/bakup-releases/releases/latest">Releases</a>
+  <a class="pill sm ghpill" href="https://github.com/RamizMohammad/backup-release/releases/latest">Releases</a>
   <a class="pill pill-cta sm" href="#install">Get bakup</a>
   <button class="menu-btn" aria-label="menu" onclick="toggleMenu(this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
@@ -303,7 +303,7 @@ footer .legal{margin-top:64px;font-size:14px;color:var(--color-surface-50)}
   <a href="#server" onclick="closeMenu()"><span class="t-ui">●</span>Server</a>
   <a href="#usage" onclick="closeMenu()"><span class="t-scroll">●</span>Usage</a>
   <a href="#requirements" onclick="closeMenu()"><span class="t-text">●</span>Requirements</a>
-  <a href="https://github.com/kobraop9517/bakup-releases/releases/latest"><span class="t-gsap">●</span>Releases</a>
+  <a href="https://github.com/RamizMohammad/backup-release/releases/latest"><span class="t-gsap">●</span>Releases</a>
 </div></nav>
 
 <!-- ================= HERO ================= -->
@@ -382,11 +382,11 @@ footer .legal{margin-top:64px;font-size:14px;color:var(--color-surface-50)}
       <p class="body">Grab the package from releases — apt resolves the dependencies (<b>python3, python3-requests</b>) for you.</p>
       <div class="code">
         <div class="head"><span class="lbl">bash — Debian / Ubuntu / Mint / Raspberry Pi OS</span><button class="copy" onclick="cp(this,'i-linux')">copy</button></div>
-        <pre id="i-linux"><span class="pr">$</span> curl -LO https://github.com/kobraop9517/bakup-releases/releases/latest/download/bakup_0.1.0_all.deb
+        <pre id="i-linux"><span class="pr">$</span> curl -LO https://github.com/RamizMohammad/backup-release/releases/latest/download/bakup_0.1.0_all.deb
 <span class="pr">$</span> sudo apt install ./bakup_0.1.0_all.deb
 <span class="pr">$</span> bakup --version</pre>
       </div>
-      <a class="pill" href="https://github.com/kobraop9517/bakup-releases/releases/latest">Download .deb</a>
+      <a class="pill" href="https://github.com/RamizMohammad/backup-release/releases/latest">Download .deb</a>
     </div>
   </div>
 
@@ -407,10 +407,18 @@ footer .legal{margin-top:64px;font-size:14px;color:var(--color-surface-50)}
       <h3>One line in PowerShell — or a GUI installer.</h3>
       <p class="body">The terminal route installs Python via winget if it's missing and puts <b>bakup</b> on your PATH. Prefer clicking? The setup wizard ships a standalone exe — <b>no Python required</b>.</p>
       <div class="code">
-        <div class="head"><span class="lbl">PowerShell</span><button class="copy" onclick="cp(this,'i-win')">copy</button></div>
-        <pre id="i-win"><span class="pr">PS&gt;</span> irm https://github.com/kobraop9517/bakup-releases/releases/latest/download/install.ps1 | iex</pre>
+        <div class="head"><span class="lbl">Option A — PowerShell, one line</span><button class="copy" onclick="cp(this,'i-win')">copy</button></div>
+        <pre id="i-win"><span class="pr">PS&gt;</span> irm https://github.com/RamizMohammad/backup-release/releases/latest/download/install.ps1 | iex</pre>
       </div>
-      <a class="pill" href="https://github.com/kobraop9517/bakup-releases/releases/latest">Download bakup-setup.exe</a>
+      <div class="code">
+        <div class="head"><span class="lbl">Option B — GUI app, no terminal needed</span></div>
+        <pre><span class="pr">1.</span> Download <b>bakup-setup-0.1.0.exe</b> from the button below
+<span class="pr">2.</span> Run it — Next → accept the license → keep <b>"Add bakup to PATH"</b> ticked
+<span class="pr">3.</span> Tick <b>"Connect to my backup server"</b> and paste your server
+   address + token — <span class="cm">the installer runs bakup config for you</span>
+<span class="pr">4.</span> Finish — open any terminal and type <b>bakup</b>  <span class="cm"># fully configured</span></pre>
+      </div>
+      <a class="pill" href="https://github.com/RamizMohammad/backup-release/releases/latest">Download bakup-setup.exe</a>
     </div>
   </div>
 
@@ -432,9 +440,9 @@ footer .legal{margin-top:64px;font-size:14px;color:var(--color-surface-50)}
       <p class="body">macOS, other Linux distros, BSD — anywhere <b>Python 3.9+</b> runs.</p>
       <div class="code">
         <div class="head"><span class="lbl">bash / PowerShell</span><button class="copy" onclick="cp(this,'i-pip')">copy</button></div>
-        <pre id="i-pip"><span class="pr">$</span> pipx install https://github.com/kobraop9517/bakup-releases/releases/latest/download/bakup-0.1.0-py3-none-any.whl
+        <pre id="i-pip"><span class="pr">$</span> pipx install https://github.com/RamizMohammad/backup-release/releases/latest/download/bakup-0.1.0-py3-none-any.whl
 <span class="cm"># or plain pip:</span>
-<span class="pr">$</span> pip install https://github.com/kobraop9517/bakup-releases/releases/latest/download/bakup-0.1.0-py3-none-any.whl</pre>
+<span class="pr">$</span> pip install https://github.com/RamizMohammad/backup-release/releases/latest/download/bakup-0.1.0-py3-none-any.whl</pre>
       </div>
     </div>
   </div>
@@ -507,7 +515,7 @@ footer .legal{margin-top:64px;font-size:14px;color:var(--color-surface-50)}
       <div class="code">
         <div class="head"><span class="lbl">on the server</span><button class="copy" onclick="cp(this,'s-1')">copy</button></div>
         <pre id="s-1"><span class="pr">$</span> mkdir bakup-server &amp;&amp; cd bakup-server
-<span class="pr">$</span> curl -LO https://github.com/kobraop9517/bakup-releases/releases/latest/download/docker-compose.yml
+<span class="pr">$</span> curl -LO https://github.com/RamizMohammad/backup-release/releases/latest/download/docker-compose.yml
 <span class="pr">$</span> docker compose up -d   <span class="cm"># pulls the image from Docker Hub</span></pre>
       </div>
     </div>
@@ -601,12 +609,12 @@ footer .legal{margin-top:64px;font-size:14px;color:var(--color-surface-50)}
       <li><a href="#requirements">Requirements</a></li>
     </ul></div>
     <div><h5>Downloads</h5><ul>
-      <li><a href="https://github.com/kobraop9517/bakup-releases/releases/latest">Latest release</a></li>
+      <li><a href="https://github.com/RamizMohammad/backup-release/releases/latest">Latest release</a></li>
       <li><a href="https://hub.docker.com/r/kobraop9517/backup">Server image (Docker Hub)</a></li>
-      <li><a href="https://github.com/kobraop9517/bakup-releases/issues">Support / Issues</a></li>
+      <li><a href="https://github.com/RamizMohammad/backup-release/issues">Support / Issues</a></li>
     </ul></div>
     <div><h5>Legal</h5><ul>
-      <li><a href="https://github.com/kobraop9517/bakup-releases/blob/main/LICENSE">License</a></li>
+      <li><a href="https://github.com/RamizMohammad/backup-release/blob/main/LICENSE">License</a></li>
     </ul></div>
   </div>
   <p class="legal">© 2026 bakup — free to use, forever self-hosted.</p>
@@ -642,7 +650,7 @@ function closeMenu(){document.getElementById('mmenu').classList.remove('open');}
 /* ================= guided setup wizard ================= */
 const STEP_SERVER={t:"Set up your server — once",d:"On the machine that will store the backups: a NAS, an old PC, a Raspberry Pi, a $5 VPS.",
   lbl:"on the server",
-  cmd:'$ mkdir bakup-server && cd bakup-server\n$ curl -LO https://github.com/kobraop9517/bakup-releases/releases/latest/download/docker-compose.yml\n$ docker compose up -d\n$ docker compose logs bakup-server\n[bakup] FIRST RUN — generated your access token:\n    9f2c41a8be6d…   <- save this',
+  cmd:'$ mkdir bakup-server && cd bakup-server\n$ curl -LO https://github.com/RamizMohammad/backup-release/releases/latest/download/docker-compose.yml\n$ docker compose up -d\n$ docker compose logs bakup-server\n[bakup] FIRST RUN — generated your access token:\n    9f2c41a8be6d…   <- save this',
   cards:[
     {k:"WARNING",c:"Anyone holding this token can read and write every backup. Treat it exactly like a password.",cls:"warn"},
     {k:"DO",c:"The server generates the token itself on first run — copy it from the logs into a password manager. Retrieve anytime: docker exec bakup-server cat /data/.bakup_token",cls:"do"},
@@ -656,19 +664,19 @@ const STEP_NET={t:"Check you can reach it",d:"From your everyday computer, hit t
 const STEP_INSTALL={
   linux:{t:"Install the client — Linux",d:"A native .deb; apt resolves the dependencies for you.",
     lbl:"bash",
-    cmd:'$ curl -LO https://github.com/kobraop9517/bakup-releases/releases/latest/download/bakup_0.1.0_all.deb\n$ sudo apt install ./bakup_0.1.0_all.deb\n$ bakup --version\nbakup 0.1.0',
+    cmd:'$ curl -LO https://github.com/RamizMohammad/backup-release/releases/latest/download/bakup_0.1.0_all.deb\n$ sudo apt install ./bakup_0.1.0_all.deb\n$ bakup --version\nbakup 0.1.0',
     cards:[
       {k:"DO",c:"Let apt pull python3 and python3-requests — that's the point of the .deb.",cls:"do"},
       {k:"DON'T",c:"Don't sudo-pip anything. The package keeps your system Python untouched.",cls:"dont"}]},
   win:{t:"Install the client — Windows",d:"One line in PowerShell, or the GUI setup wizard from the releases page.",
     lbl:"PowerShell",
-    cmd:'PS> irm https://github.com/kobraop9517/bakup-releases/releases/latest/download/install.ps1 | iex\nPS> bakup --version\nbakup 0.1.0',
+    cmd:'PS> irm https://github.com/RamizMohammad/backup-release/releases/latest/download/install.ps1 | iex\nPS> bakup --version\nbakup 0.1.0',
     cards:[
       {k:"WARNING",c:"Piping a script into your shell is powerful — skim install.ps1 first so you know exactly what it does. (It installs Python via winget if missing and adds bakup to PATH.)",cls:"warn"},
-      {k:"DO",c:"Prefer clicking? Download bakup-setup.exe instead — bundled exe, no Python needed.",cls:"do"}]},
+      {k:"DO",c:"Prefer clicking? Run bakup-setup-0.1.0.exe instead — a normal setup wizard, no Python needed. Tick 'Connect to my backup server' during install and it even runs bakup config for you.",cls:"do"}]},
   pip:{t:"Install the client — macOS / anywhere",d:"Any OS with Python 3.9 or newer.",
     lbl:"bash / zsh",
-    cmd:'$ pipx install https://github.com/kobraop9517/bakup-releases/releases/latest/download/bakup-0.1.0-py3-none-any.whl\n$ bakup --version\nbakup 0.1.0',
+    cmd:'$ pipx install https://github.com/RamizMohammad/backup-release/releases/latest/download/bakup-0.1.0-py3-none-any.whl\n$ bakup --version\nbakup 0.1.0',
     cards:[
       {k:"DO",c:"Use pipx over pip — it isolates bakup from your other Python packages.",cls:"do"},
       {k:"DON'T",c:"Don't run it on Python < 3.9 — check with python3 --version first.",cls:"dont"}]}};
@@ -706,7 +714,7 @@ const SRV_INSTALL={t:"Install Docker on the server box",d:"Any machine you own w
     {k:"WARNING",c:"Piping a script into your shell is powerful — skim get.docker.com first so you know what it does.",cls:"warn"}]};
 const SRV_START={t:"Download & start the server",d:"One compose file. The image pulls from Docker Hub — no source code, no build step.",
   lbl:"docker compose",
-  cmd:'$ mkdir bakup-server && cd bakup-server\n$ curl -LO https://github.com/kobraop9517/bakup-releases/releases/latest/download/docker-compose.yml\n$ docker compose up -d',
+  cmd:'$ mkdir bakup-server && cd bakup-server\n$ curl -LO https://github.com/RamizMohammad/backup-release/releases/latest/download/docker-compose.yml\n$ docker compose up -d',
   cards:[
     {k:"DO",c:"Prefer a one-liner? docker run -d --name bakup-server --restart unless-stopped -p 8000:8000 -v ./data:/data kobraop9517/backup:latest",cls:"do"},
     {k:"DON'T",c:"Don't start two server instances on the same data folder.",cls:"dont"}]};
