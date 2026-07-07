@@ -1,0 +1,24 @@
+# bakup server — user deployment file. No source code, no manual token setup.
+#
+#   mkdir bakup-server && cd bakup-server
+#   (download this file here)
+#   docker compose up -d
+#   docker compose logs bakup-server     <- first run prints your access token
+#
+services:
+  bakup-server:
+    image: kobraop9517/backup:latest
+    container_name: bakup-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # optional — leave empty and the server generates + saves one on first run
+      - BAKUP_TOKEN=${BAKUP_TOKEN:-}
+    volumes:
+      - ./data:/data          # or point at a big disk: /mnt/hdd/bakup:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

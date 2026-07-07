@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bakup — backup anything</title>
+<meta name="description" content="Self-hosted, git-like backup. Commit offline, push when you're home. Deduplicated, content-addressed, yours.">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --color-just-black:#0e100f; --color-surface-cream:#fffce1; --color-surface-50:#7c7c6f;
+  --color-surface-25:#42433d; --color-off-black:#191919;
+  --color-shockingly-green:#0ae448; --gradient-shockingly-green:linear-gradient(114.41deg,#0ae448 20.74%,#abff84 65.5%);
+  --color-light-green:#abff84; --color-orangey:#ff8709; --color-pink:#fec5fb;
+  --color-lilac:#9d95ff; --color-blue:#00bae2; --color-lipstick-pink:#f100cb;
+  --font-mori:'Inter Tight',ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --page-max-width:1280px; --section-gap:80px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--color-just-black);color:var(--color-surface-cream);
+  font-family:var(--font-mori);font-weight:400;font-size:19px;line-height:1.15;
+  letter-spacing:-.01em;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+code,pre{font-family:ui-monospace,"Cascadia Code",Consolas,Menlo,monospace}
+.wrap{max-width:var(--page-max-width);margin:0 auto;padding:0 32px}
+
+/* ---------- announcement ---------- */
+.banner{text-align:center;font-size:14px;line-height:1.4;letter-spacing:-.14px;
+  padding:12px 16px;color:var(--color-surface-cream)}
+.banner a{color:var(--color-shockingly-green)}
+.banner a:hover{color:var(--color-light-green)}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;background:rgba(14,16,15,.82);backdrop-filter:blur(12px)}
+nav .wrap{display:flex;align-items:center;gap:16px;height:72px}
+.wordmark{font-weight:600;font-size:24px;letter-spacing:-.02em;color:var(--color-shockingly-green)}
+nav .links{display:flex;gap:6px;margin-left:24px}
+nav .links a{font-size:16px;line-height:1.15;color:var(--color-surface-50);padding:10px 12px}
+nav .links a:hover{color:var(--color-surface-cream)}
+nav .links a.c-scroll:hover{color:var(--color-pink)}
+nav .links a.c-svg:hover{color:var(--color-orangey)}
+nav .links a.c-text:hover{color:var(--color-lilac)}
+nav .links a.c-ui:hover{color:var(--color-blue)}
+nav .links a.c-gsap:hover{color:var(--color-shockingly-green)}
+nav .spacer{flex:1}
+/* mobile menu */
+.menu-btn{display:none;align-items:center;justify-content:center;width:44px;height:44px;
+  border:none;border-radius:50%;background:transparent;color:var(--color-surface-cream);cursor:pointer}
+.menu-btn svg{width:24px;height:24px}
+.mobile-menu{display:none;flex-direction:column;background:rgba(14,16,15,.97);
+  border-bottom:1px solid var(--color-surface-25);padding:8px 32px 24px}
+.mobile-menu.open{display:flex}
+.mobile-menu a{font-size:19px;padding:14px 0;color:var(--color-surface-cream);
+  border-bottom:1px solid var(--color-surface-25)}
+.mobile-menu a:last-child{border-bottom:none}
+.mobile-menu a span{margin-right:12px}
+
+/* ---------- buttons ---------- */
+.pill{display:inline-block;border:1px solid var(--color-surface-cream);border-radius:100px;
+  padding:15px 24px;font-size:18px;font-weight:600;line-height:1.05;
+  color:var(--color-surface-cream);background:transparent;cursor:pointer;
+  transition:border-color .15s,opacity .15s}
+.pill:hover{opacity:.8}
+.pill.sm{padding:9px 18px;font-size:16px}
+.pill-cta{position:relative;border:none;background:transparent;padding:16.5px 25.5px}
+.pill-cta::before{content:"";position:absolute;inset:0;border-radius:100px;padding:1.5px;
+  background:var(--gradient-shockingly-green);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+
+/* ---------- hero ---------- */
+.hero{padding:76px 0 96px;position:relative}
+.hero .display{font-weight:600;font-size:clamp(64px,16.5vw,224px);line-height:.9;
+  letter-spacing:-.02em;color:var(--color-surface-cream);margin-left:-4px}
+.hero .display .accent{background:var(--gradient-shockingly-green);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero{overflow:visible}
+/* interactive hero icons */
+.hicon{position:absolute;cursor:pointer;z-index:0;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.hicon:hover{transform:scale(1.18) rotate(-6deg)}
+.hicon.h1{right:5%;top:4%;width:150px;animation:bob 5s ease-in-out infinite}
+.hicon.h2{right:25%;top:58%;width:100px;animation:bob 6.5s ease-in-out 1.2s infinite}
+.hicon.h3{left:39%;top:-18px;width:84px;animation:bob 7s ease-in-out .6s infinite}
+.hicon svg{width:100%;height:auto;overflow:visible}
+@keyframes bob{0%,100%{translate:0 0}50%{translate:0 -14px}}
+.hicon svg *,.ticon svg *{vector-effect:non-scaling-stroke}
+.hicon .up{transition:translate .3s ease}
+.hicon:hover .up{translate:0 -4px}
+.led{animation:blink 1.6s steps(2) infinite}
+.led2{animation:blink 1.6s steps(2) .8s infinite}
+@keyframes blink{50%{opacity:.15}}
+.pulse{animation:pulse .45s ease}
+@keyframes pulse{0%{scale:1}40%{scale:.86}100%{scale:1}}
+.eyebrow{font-size:19px;line-height:1.15;color:var(--color-surface-cream)}
+.eyebrow .mut{color:var(--color-surface-50)}
+.hero .sub{margin-top:32px;max-width:640px;font-size:23px;line-height:1.38;
+  letter-spacing:-.23px;color:var(--color-surface-50)}
+.hero .sub b{color:var(--color-surface-cream);font-weight:600}
+.hero .cta-row{margin-top:32px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+
+/* ---------- sections ---------- */
+section{padding:var(--section-gap) 0}
+.sect-head{margin-bottom:76px}
+.sect-head .eyebrow{margin-bottom:24px}
+h2.heading{font-weight:600;font-size:clamp(40px,6vw,66px);line-height:1.2;letter-spacing:-.66px}
+h2.heading .g{background:var(--gradient-shockingly-green);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hairline{border:none;border-top:1px solid var(--color-surface-25)}
+
+/* why grid */
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
+.why{padding:24px;border-radius:8px;background:var(--color-off-black)}
+.why .tag{font-size:19px;margin-bottom:12px;display:block}
+.why h3{font-size:24px;font-weight:600;letter-spacing:-.24px;margin-bottom:8px}
+.why p{font-size:16px;line-height:1.4;color:var(--color-surface-50)}
+.t-scroll{color:var(--color-pink)} .t-svg{color:var(--color-orangey)}
+.t-text{color:var(--color-lilac)} .t-ui{color:var(--color-blue)}
+.t-gsap{color:var(--color-shockingly-green)} .t-lite{color:var(--color-light-green)}
+
+/* tool feature blocks */
+.tool{display:grid;grid-template-columns:1fr 1.2fr;gap:64px;align-items:center;padding:76px 0}
+.tool .art{position:relative;min-height:300px;display:flex;align-items:center;justify-content:center;perspective:700px}
+.ticon{width:280px;height:280px;cursor:pointer;transition:transform .25s ease;transform-style:preserve-3d}
+.ticon svg{width:100%;height:100%;overflow:visible}
+.ticon svg rect,.ticon svg path,.ticon svg circle,.ticon svg line,.ticon svg polyline{
+  transform-box:fill-box;transform-origin:center}
+.cursorline{animation:blink 1.2s steps(2) infinite}
+.ticon:hover .p1{transform:translateY(-3px)}
+.ticon:hover .p2{transform:translateY(-3px);transition-delay:.06s}
+.ticon:hover .p3{transform:translateY(-3px);transition-delay:.12s}
+.ticon:hover .p4{transform:translateY(-3px);transition-delay:.18s}
+.ticon .p1,.ticon .p2,.ticon .p3,.ticon .p4{transition:transform .25s ease}
+.ticon:hover .lid{transform:translateY(-5px) rotate(-3deg)}
+.ticon .lid{transition:transform .3s ease}
+.ticon:hover .prompt{transform:translateX(4px)}
+.ticon .prompt{transition:transform .25s ease}
+.tool .cat{font-size:24px;margin-bottom:16px}
+.tool h3{font-size:clamp(32px,4vw,44px);font-weight:600;line-height:1.2;letter-spacing:-.44px;margin-bottom:16px}
+.tool p.body{font-size:23px;line-height:1.38;letter-spacing:-.23px;color:var(--color-surface-50);margin-bottom:24px}
+.tool p.body b{color:var(--color-surface-cream);font-weight:600}
+
+/* code blocks */
+.code{background:var(--color-off-black);border-radius:8px;margin-bottom:24px}
+.code .head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--color-surface-25)}
+.code .head .lbl{font-size:14px;letter-spacing:-.14px;color:var(--color-surface-50)}
+.copy{margin-left:auto;border:1px solid var(--color-surface-25);border-radius:100px;background:transparent;
+  color:var(--color-surface-50);font-family:var(--font-mori);font-size:14px;font-weight:600;
+  padding:4px 14px;cursor:pointer}
+.copy:hover{color:var(--color-surface-cream);border-color:var(--color-surface-cream)}
+.code pre{padding:20px;font-size:16px;line-height:1.6;overflow-x:auto;color:var(--color-surface-cream)}
+.code .cm{color:var(--color-surface-50)}
+.code .pr{color:var(--color-shockingly-green)}
+
+/* steps */
+.step-row{display:grid;grid-template-columns:56px 1fr;gap:20px;padding:32px 0}
+.step-n{font-size:34px;font-weight:600;letter-spacing:-.34px;color:var(--color-surface-25)}
+.step-row h4{font-size:24px;font-weight:600;letter-spacing:-.24px;margin-bottom:8px}
+.step-row p{font-size:19px;color:var(--color-surface-50);margin-bottom:16px}
+.step-row p b{color:var(--color-surface-cream)}
+
+/* requirements */
+.req{display:grid;grid-template-columns:220px 1fr;gap:24px;padding:24px 0}
+.req .k{font-size:24px;font-weight:600;letter-spacing:-.24px}
+.req .v{font-size:19px;line-height:1.4;color:var(--color-surface-50)}
+.req .v b{color:var(--color-surface-cream);font-weight:600}
+.req .v code{color:var(--color-surface-cream);font-size:16px}
+
+/* overflow guards — long commands scroll inside their block, never stretch the page */
+.tool>div,.step-row>div,.guide>*{min-width:0}
+.code{min-width:0;max-width:100%}
+
+/* guided setup wizard */
+.guide-os{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px}
+.os-pill{border-color:var(--color-surface-25);color:var(--color-surface-50)}
+.os-pill.on-linux{border-color:var(--color-orangey);color:var(--color-orangey);opacity:1}
+.os-pill.on-win{border-color:var(--color-blue);color:var(--color-blue);opacity:1}
+.os-pill.on-pip{border-color:var(--color-lilac);color:var(--color-lilac);opacity:1}
+.os-pill.on-docker{border-color:var(--color-shockingly-green);color:var(--color-shockingly-green);opacity:1}
+.guide{display:grid;grid-template-columns:1.05fr .95fr;gap:32px;align-items:start}
+.gterm{background:var(--color-off-black);border-radius:8px;cursor:pointer}
+.gterm .head{display:flex;gap:6px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--color-surface-25)}
+.gterm .dot{width:10px;height:10px;border-radius:50%;background:var(--color-surface-25)}
+.gterm .head .lbl{margin-left:8px;font-size:14px;color:var(--color-surface-50)}
+.gterm pre{padding:20px;font-size:15px;line-height:1.75;min-height:230px;
+  white-space:pre-wrap;word-break:break-all;color:var(--color-surface-cream)}
+.gcaret{display:inline-block;width:8px;height:15px;background:var(--color-surface-cream);
+  vertical-align:-2px;animation:blink 1s steps(2) infinite}
+.gstep .eyebrow{margin-bottom:12px}
+.gstep h4{font-size:24px;font-weight:600;letter-spacing:-.24px;margin-bottom:8px}
+.gstep p.gd{font-size:17px;line-height:1.4;color:var(--color-surface-50);margin-bottom:8px}
+.gcard{background:var(--color-off-black);border-radius:8px;padding:14px 16px;margin-top:12px}
+.gcard .k{display:block;font-size:14px;font-weight:600;letter-spacing:.04em;margin-bottom:4px}
+.gcard p{font-size:16px;line-height:1.4;color:var(--color-surface-50)}
+.gcard.do .k{color:var(--color-shockingly-green)}
+.gcard.dont .k{color:var(--color-pink)}
+.gcard.warn .k{color:var(--color-orangey)}
+.gnav{display:flex;gap:12px;margin-top:24px;align-items:center;flex-wrap:wrap}
+.gcount{margin-left:auto;font-size:14px;color:var(--color-surface-50)}
+.gbar{height:1px;background:var(--color-surface-25);margin-top:20px;position:relative}
+.gbar i{position:absolute;left:0;top:0;height:1px;background:var(--gradient-shockingly-green);transition:width .4s ease}
+@media(max-width:900px){.guide{grid-template-columns:1fr}.gterm pre{min-height:170px}}
+
+/* footer */
+footer{background:var(--color-off-black);border-top:1px solid var(--color-surface-25);
+  padding:76px 0;margin-top:var(--section-gap)}
+footer .cols{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:32px}
+footer .mark{font-size:34px;font-weight:600;color:var(--color-shockingly-green)}
+footer .tagline{margin-top:16px;font-size:16px;color:var(--color-surface-50);line-height:1.4}
+footer h5{font-size:14px;letter-spacing:-.14px;color:var(--color-surface-50);
+  font-weight:400;margin-bottom:16px}
+footer ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+footer ul a{font-size:16px;color:var(--color-surface-cream)}
+footer ul a:hover{color:var(--color-light-green)}
+footer .legal{margin-top:64px;font-size:14px;color:var(--color-surface-50)}
+
+/* ---------- responsive ---------- */
+@media(max-width:1100px){
+  .hicon.h1{right:2%;top:0}
+}
+@media(max-width:900px){
+  .tool{grid-template-columns:1fr;gap:24px}
+  .tool .art{min-height:200px}
+  .ticon{width:190px;height:190px}
+  .hicon.h1{width:96px}
+  .hicon.h2,.hicon.h3{display:none}
+  footer .cols{grid-template-columns:1fr 1fr}
+  .req{grid-template-columns:1fr;gap:8px}
+  nav .links{display:none}
+  .menu-btn{display:inline-flex}
+}
+@media(max-width:640px){
+  body{font-size:17px}
+  .wrap{padding:0 20px}
+  section{padding:56px 0}
+  .sect-head{margin-bottom:48px}
+  .banner{font-size:13px;padding:10px 14px}
+  nav .wrap{height:60px;gap:10px}
+  .ghpill{display:none}
+  .mobile-menu{padding:8px 20px 20px}
+  .hero{padding:48px 0 64px}
+  .hero .sub{font-size:19px;line-height:1.4;margin-top:24px}
+  .hero .cta-row{margin-top:24px;gap:12px}
+  .hicon.h1{width:68px;opacity:.9}
+  .pill{padding:13px 20px;font-size:16px}
+  .pill.sm{padding:8px 14px;font-size:14px}
+  h2.heading{letter-spacing:-.4px}
+  .why-grid{grid-template-columns:1fr;gap:16px}
+  .tool{padding:48px 0}
+  .tool h3{font-size:26px;letter-spacing:-.26px}
+  .tool p.body{font-size:19px;line-height:1.4}
+  .tool .art{min-height:170px}
+  .ticon{width:150px;height:150px}
+  .code pre{font-size:14px;padding:16px;line-height:1.55}
+  .code .head{padding:10px 12px}
+  .step-row{grid-template-columns:1fr;gap:6px;padding:24px 0}
+  .step-n{font-size:23px}
+  .step-row h4{font-size:21px}
+  .step-row p{font-size:17px}
+  .req{padding:20px 0}
+  .req .k{font-size:20px}
+  .req .v{font-size:17px}
+  footer{padding:56px 0;margin-top:56px}
+  footer .cols{grid-template-columns:1fr;gap:32px}
+  footer .legal{margin-top:44px}
+}
+@media(max-width:420px){
+  .hero .display{font-size:clamp(50px,17vw,224px)}
+  .hicon.h1{display:none}
+  .cta-row .pill{width:100%;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="banner">bakup is free to use &amp; fully self-hosted — <a href="https://github.com/kobraop9517/bakup-releases/releases/latest">get the latest release&nbsp;→</a></div>
+
+<nav><div class="wrap">
+  <a class="wordmark" href="#">bakup<span style="font-size:14px;vertical-align:super">®</span></a>
+  <div class="links">
+    <a class="c-svg" href="#install">Install</a>
+    <a class="c-gsap" href="#guide">Guide</a>
+    <a class="c-ui" href="#server">Server</a>
+    <a class="c-scroll" href="#usage">Usage</a>
+    <a class="c-text" href="#requirements">Requirements</a>
+  </div>
+  <span class="spacer"></span>
+  <a class="pill sm ghpill" href="https://github.com/kobraop9517/bakup-releases/releases/latest">Releases</a>
+  <a class="pill pill-cta sm" href="#install">Get bakup</a>
+  <button class="menu-btn" aria-label="menu" onclick="toggleMenu(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path class="mi-top" d="M4 7h16"/><path class="mi-mid" d="M4 12h16"/><path class="mi-bot" d="M4 17h16"/>
+    </svg>
+  </button>
+</div>
+<div class="mobile-menu" id="mmenu">
+  <a href="#install" onclick="closeMenu()"><span class="t-svg">●</span>Install</a>
+  <a href="#guide" onclick="closeMenu()"><span class="t-gsap">●</span>Guide</a>
+  <a href="#server" onclick="closeMenu()"><span class="t-ui">●</span>Server</a>
+  <a href="#usage" onclick="closeMenu()"><span class="t-scroll">●</span>Usage</a>
+  <a href="#requirements" onclick="closeMenu()"><span class="t-text">●</span>Requirements</a>
+  <a href="https://github.com/kobraop9517/bakup-releases/releases/latest"><span class="t-gsap">●</span>Releases</a>
+</div></nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero"><div class="wrap" style="position:relative">
+  <span class="hicon h1" title="push to your server">
+    <svg viewBox="0 0 64 64" fill="none" stroke="#fec5fb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 18h16l6 6h30v28a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z"/>
+      <path d="M6 18v-4a4 4 0 0 1 4-4h10l4 4"/>
+      <g class="up"><path d="M32 50V34"/><path d="M25 41l7-7 7 7"/></g>
+    </svg>
+  </span>
+  <span class="hicon h2" title="commit history">
+    <svg viewBox="0 0 64 64" fill="none" stroke="#ff8709" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="14" cy="48" r="6"/><circle cx="32" cy="17" r="6"/><circle cx="50" cy="42" r="6"/>
+      <path d="M17 43l12-21M36 21l11 16"/>
+    </svg>
+  </span>
+  <span class="hicon h3" title="your server">
+    <svg viewBox="0 0 64 64" fill="none" stroke="#0ae448" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="8" y="9" width="48" height="19" rx="4"/>
+      <rect x="8" y="36" width="48" height="19" rx="4"/>
+      <circle class="led" cx="17" cy="18.5" r="1.6" fill="#0ae448"/>
+      <circle class="led2" cx="17" cy="45.5" r="1.6" fill="#0ae448"/>
+      <path d="M34 18.5h13M34 45.5h13"/>
+    </svg>
+  </span>
+  <p class="eyebrow" style="margin-bottom:32px">{ <span class="mut">git-like backup, self-hosted</span> }</p>
+  <h1 class="display">Backup<br><span class="accent">anything.</span></h1>
+  <p class="sub"><b>Commit offline</b> anywhere, <b>push</b> when you're home.
+  Content-addressed &amp; deduplicated — identical files stored once, on a server that is <b>yours</b>.</p>
+  <div class="cta-row">
+    <a class="pill pill-cta" href="#install">Get bakup</a>
+    <a class="pill" href="#usage">Explore the workflow</a>
+  </div>
+</div></header>
+
+<hr class="hairline">
+
+<!-- ================= WHY ================= -->
+<section><div class="wrap">
+  <div class="sect-head">
+    <p class="eyebrow">{ <span class="mut">Why bakup®</span> }</p>
+  </div>
+  <h2 class="heading" style="margin-bottom:76px">Your files. Your server.<br>Your <span class="g">rules.</span></h2>
+  <div class="why-grid">
+    <div class="why"><span class="tag t-scroll">Offline</span><h3>Commit anywhere</h3><p>Snapshots are recorded locally, exactly like git. No connection needed until you push.</p></div>
+    <div class="why"><span class="tag t-svg">Dedup</span><h3>Stored once</h3><p>Content-addressed by sha256 — the same file across ten repos costs one copy on the server.</p></div>
+    <div class="why"><span class="tag t-ui">Self-hosted</span><h3>One container</h3><p>A single Docker service on any machine you own. Unlimited clients, unlimited repos, one token.</p></div>
+    <div class="why"><span class="tag t-text">Incremental</span><h3>Only the new</h3><p>git-style stat cache plus server negotiation — only content the server lacks ever crosses the wire.</p></div>
+  </div>
+</div></section>
+
+<hr class="hairline">
+
+<!-- ================= INSTALL ================= -->
+<section id="install"><div class="wrap">
+  <div class="sect-head">
+    <p class="eyebrow">{ <span class="mut">Install the client</span> }</p>
+    <h2 class="heading" style="margin-top:24px">Three ways in.<br>Configure once.</h2>
+  </div>
+
+  <!-- Linux -->
+  <div class="tool">
+    <div class="art"><div class="ticon tilt" title="terminal">
+      <svg viewBox="0 0 64 64" fill="none" stroke="#ff8709" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="10" width="54" height="44" rx="5"/>
+        <path d="M5 20h54"/>
+        <circle cx="11.5" cy="15" r="1.3"/><circle cx="17" cy="15" r="1.3"/><circle cx="22.5" cy="15" r="1.3"/>
+        <polyline class="prompt" points="13 30 21 37 13 44"/>
+        <path class="cursorline" d="M26 44h11"/>
+      </svg>
+    </div></div>
+    <div>
+      <p class="cat t-svg">Linux</p>
+      <h3>A real .deb, like the tools you already trust.</h3>
+      <p class="body">Grab the package from releases — apt resolves the dependencies (<b>python3, python3-requests</b>) for you.</p>
+      <div class="code">
+        <div class="head"><span class="lbl">bash — Debian / Ubuntu / Mint / Raspberry Pi OS</span><button class="copy" onclick="cp(this,'i-linux')">copy</button></div>
+        <pre id="i-linux"><span class="pr">$</span> curl -LO https://github.com/kobraop9517/bakup-releases/releases/latest/download/bakup_0.1.0_all.deb
+<span class="pr">$</span> sudo apt install ./bakup_0.1.0_all.deb
+<span class="pr">$</span> bakup --version</pre>
+      </div>
+      <a class="pill" href="https://github.com/kobraop9517/bakup-releases/releases/latest">Download .deb</a>
+    </div>
+  </div>
+
+  <hr class="hairline">
+
+  <!-- Windows -->
+  <div class="tool">
+    <div class="art"><div class="ticon tilt" title="windows">
+      <svg viewBox="0 0 64 64" fill="none" stroke="#00bae2" stroke-width="1.5" stroke-linejoin="round">
+        <rect class="p1" x="8" y="8" width="21" height="21" rx="3"/>
+        <rect class="p2" x="35" y="8" width="21" height="21" rx="3"/>
+        <rect class="p3" x="8" y="35" width="21" height="21" rx="3"/>
+        <rect class="p4" x="35" y="35" width="21" height="21" rx="3"/>
+      </svg>
+    </div></div>
+    <div>
+      <p class="cat t-ui">Windows</p>
+      <h3>One line in PowerShell — or a GUI installer.</h3>
+      <p class="body">The terminal route installs Python via winget if it's missing and puts <b>bakup</b> on your PATH. Prefer clicking? The setup wizard ships a standalone exe — <b>no Python required</b>.</p>
+      <div class="code">
+        <div class="head"><span class="lbl">PowerShell</span><button class="copy" onclick="cp(this,'i-win')">copy</button></div>
+        <pre id="i-win"><span class="pr">PS&gt;</span> irm https://github.com/kobraop9517/bakup-releases/releases/latest/download/install.ps1 | iex</pre>
+      </div>
+      <a class="pill" href="https://github.com/kobraop9517/bakup-releases/releases/latest">Download bakup-setup.exe</a>
+    </div>
+  </div>
+
+  <hr class="hairline">
+
+  <!-- pip -->
+  <div class="tool">
+    <div class="art"><div class="ticon tilt" title="package">
+      <svg viewBox="0 0 64 64" fill="none" stroke="#9d95ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <g class="lid"><path d="M32 6 56 18 32 30 8 18z"/></g>
+        <path d="M8 18v28l24 12V30"/>
+        <path d="M56 18v28L32 58"/>
+        <path d="M20 12l24 12"/>
+      </svg>
+    </div></div>
+    <div>
+      <p class="cat t-text">Any OS</p>
+      <h3>pip, for everything else.</h3>
+      <p class="body">macOS, other Linux distros, BSD — anywhere <b>Python 3.9+</b> runs.</p>
+      <div class="code">
+        <div class="head"><span class="lbl">bash / PowerShell</span><button class="copy" onclick="cp(this,'i-pip')">copy</button></div>
+        <pre id="i-pip"><span class="pr">$</span> pipx install https://github.com/kobraop9517/bakup-releases/releases/latest/download/bakup-0.1.0-py3-none-any.whl
+<span class="cm"># or plain pip:</span>
+<span class="pr">$</span> pip install https://github.com/kobraop9517/bakup-releases/releases/latest/download/bakup-0.1.0-py3-none-any.whl</pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="hairline">
+
+  <div style="padding-top:76px">
+    <p class="eyebrow" style="margin-bottom:24px">{ <span class="mut">then, once per machine</span> }</p>
+    <div class="code" style="max-width:820px">
+      <div class="head"><span class="lbl">one-time setup</span><button class="copy" onclick="cp(this,'i-cfg')">copy</button></div>
+      <pre id="i-cfg"><span class="pr">$</span> bakup config --server http://YOUR-SERVER-IP:8000 --token YOUR-TOKEN</pre>
+    </div>
+  </div>
+</div></section>
+
+<hr class="hairline">
+
+<!-- ================= GUIDED SETUP ================= -->
+<section id="guide"><div class="wrap">
+  <div class="sect-head">
+    <p class="eyebrow">{ <span class="mut">Interactive setup guide</span> }</p>
+    <h2 class="heading" style="margin-top:24px">Walk through it.<br>Get it <span class="g">right.</span></h2>
+    <p style="margin-top:24px;font-size:23px;line-height:1.38;color:var(--color-surface-50);max-width:640px">
+    Pick your side — a client OS, or the Docker box that stores everything — and step through a perfect setup with the warnings, do's and don'ts most people learn the hard way.</p>
+  </div>
+
+  <div class="guide-os">
+    <button class="pill os-pill on-linux" id="os-linux" onclick="setOS('linux')">🐧 Linux</button>
+    <button class="pill os-pill" id="os-win" onclick="setOS('win')">🪟 Windows</button>
+    <button class="pill os-pill" id="os-pip" onclick="setOS('pip')">🐍 macOS / pip</button>
+    <button class="pill os-pill" id="os-docker" onclick="setOS('docker')">🐳 Server (Docker)</button>
+  </div>
+
+  <div class="guide">
+    <div class="gterm" onclick="skipType()" title="click to skip typing">
+      <div class="head"><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="lbl" id="gterm-lbl">terminal</span></div>
+      <pre id="gterm-pre"></pre>
+    </div>
+    <div class="gstep">
+      <p class="eyebrow">{ <span class="mut" id="g-eyebrow">step 1</span> }</p>
+      <h4 id="g-title"></h4>
+      <p class="gd" id="g-desc"></p>
+      <div id="g-cards"></div>
+      <div class="gnav">
+        <button class="pill sm" id="g-back" onclick="gStep(-1)">← Back</button>
+        <button class="pill pill-cta sm" id="g-next" onclick="gStep(1)">Next →</button>
+        <span class="gcount" id="g-count"></span>
+      </div>
+      <div class="gbar"><i id="g-bar" style="width:0%"></i></div>
+    </div>
+  </div>
+</div></section>
+
+<hr class="hairline">
+
+<!-- ================= SERVER ================= -->
+<section id="server"><div class="wrap">
+  <div class="sect-head">
+    <p class="eyebrow">{ <span class="mut">Run your own server</span> }</p>
+    <h2 class="heading" style="margin-top:24px">Any box with Docker.<br><span class="t-ui">Three commands.</span></h2>
+    <p style="margin-top:24px;font-size:23px;line-height:1.38;color:var(--color-surface-50);max-width:640px">
+    An old PC, a NAS, a Raspberry Pi, a $5 VPS — one server handles unlimited clients, and dedup is shared across all of them.</p>
+  </div>
+
+  <div class="step-row">
+    <span class="step-n">01</span>
+    <div>
+      <h4>Download &amp; start — no code, no config</h4>
+      <div class="code">
+        <div class="head"><span class="lbl">on the server</span><button class="copy" onclick="cp(this,'s-1')">copy</button></div>
+        <pre id="s-1"><span class="pr">$</span> mkdir bakup-server &amp;&amp; cd bakup-server
+<span class="pr">$</span> curl -LO https://github.com/kobraop9517/bakup-releases/releases/latest/download/docker-compose.yml
+<span class="pr">$</span> docker compose up -d   <span class="cm"># pulls the image from Docker Hub</span></pre>
+      </div>
+    </div>
+  </div>
+  <hr class="hairline">
+  <div class="step-row">
+    <span class="step-n">02</span>
+    <div>
+      <h4>Grab your auto-generated token</h4>
+      <p>On first run the server <b>generates its own secret token</b>, saves it in the data volume, and prints it in the logs. Backups land in <b>./data</b> — point the volume at a big disk if you like (<code>/mnt/hdd/bakup:/data</code>).</p>
+      <div class="code">
+        <div class="head"><span class="lbl">docker</span><button class="copy" onclick="cp(this,'s-2')">copy</button></div>
+        <pre id="s-2"><span class="pr">$</span> docker compose logs bakup-server   <span class="cm"># shows the token — save it</span>
+<span class="pr">$</span> docker exec bakup-server cat /data/.bakup_token   <span class="cm"># or anytime later</span>
+<span class="pr">$</span> curl http://localhost:8000/health   <span class="cm"># {"ok":true}</span></pre>
+      </div>
+    </div>
+  </div>
+  <hr class="hairline">
+  <div class="step-row">
+    <span class="step-n">03</span>
+    <div>
+      <h4>Done — enjoy the entire system</h4>
+      <p>Every machine that runs <b>bakup config</b> with your server address and token can now push repos from any folder.</p>
+    </div>
+  </div>
+</div></section>
+
+<hr class="hairline">
+
+<!-- ================= USAGE ================= -->
+<section id="usage"><div class="wrap">
+  <div class="sect-head">
+    <p class="eyebrow">{ <span class="mut">Daily use</span> }</p>
+    <h2 class="heading" style="margin-top:24px">If you know git,<br>you know <span class="t-scroll">bakup.</span></h2>
+  </div>
+  <div class="code" style="max-width:900px">
+    <div class="head"><span class="lbl">inside any folder you care about</span><button class="copy" onclick="cp(this,'u-1')">copy</button></div>
+    <pre id="u-1"><span class="pr">$</span> bakup init                    <span class="cm"># like git init — once per folder</span>
+<span class="pr">$</span> bakup status                  <span class="cm"># what changed? server connected?</span>
+<span class="pr">$</span> bakup commit -m "wip"         <span class="cm"># snapshot locally — works offline</span>
+<span class="pr">$</span> bakup push                    <span class="cm"># upload to your server when reachable</span>
+<span class="pr">$</span> bakup log                     <span class="cm"># history: ✓ pushed / ○ local</span>
+<span class="pr">$</span> bakup restore 20260706-031503 ./restored</pre>
+  </div>
+  <p style="font-size:19px;color:var(--color-surface-50);max-width:820px;line-height:1.4">
+  Offline? <b style="color:var(--color-surface-cream)">commit still works</b> — it saves locally and says
+  <i>"no server connected — push when you're home."</i> push refuses safely and changes nothing.
+  Automate it: <code style="color:var(--color-light-green)">bakup commit -m auto &amp;&amp; bakup push</code> in cron or Task Scheduler.</p>
+</div></section>
+
+<hr class="hairline">
+
+<!-- ================= REQUIREMENTS ================= -->
+<section id="requirements"><div class="wrap">
+  <div class="sect-head">
+    <p class="eyebrow">{ <span class="mut">Requirements</span> }</p>
+    <h2 class="heading" style="margin-top:24px">Deliberately <span class="t-text">tiny.</span></h2>
+  </div>
+
+  <div class="req"><span class="k t-svg">Linux client</span>
+    <span class="v"><b>Debian-family</b> with Python 3.9+ — apt installs <code>python3-requests</code> for you. Other distros: use pip.</span></div>
+  <hr class="hairline">
+  <div class="req"><span class="k t-ui">Windows client</span>
+    <span class="v"><b>Windows 10/11.</b> GUI installer needs nothing else (bundled exe). Terminal install fetches Python 3.12 via winget if missing.</span></div>
+  <hr class="hairline">
+  <div class="req"><span class="k t-text">macOS / other</span>
+    <span class="v"><b>Python 3.9+</b> and pip or pipx. That's it.</span></div>
+  <hr class="hairline">
+  <div class="req"><span class="k t-gsap">Server</span>
+    <span class="v"><b>Docker + Compose</b> on any OS or architecture (x86, ARM, Raspberry Pi). ~50 MB RAM idle, plus disk for your backups. Image: <code>kobraop9517/backup</code> on Docker Hub.</span></div>
+  <hr class="hairline">
+  <div class="req"><span class="k t-scroll">Network</span>
+    <span class="v">Client reaches the server on <b>port 8000</b> — same LAN is enough. Away from home, a mesh VPN (Tailscale, WireGuard) makes it reachable anywhere. Offline, commits simply queue up.</span></div>
+  <hr class="hairline">
+  <div class="req"><span class="k t-lite">Auth</span>
+    <span class="v">One shared <b>Bearer token</b>, auto-generated by the server on first run. Keep it secret — anyone holding it can read and write backups.</span></div>
+</div></section>
+
+<!-- ================= FOOTER ================= -->
+<footer><div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="mark">bakup<span style="font-size:16px;vertical-align:super">®</span></div>
+      <p class="tagline">{ your files, your server, your rules }</p>
+    </div>
+    <div><h5>Product</h5><ul>
+      <li><a href="#install">Install</a></li>
+      <li><a href="#server">Server setup</a></li>
+      <li><a href="#usage">Workflow</a></li>
+      <li><a href="#requirements">Requirements</a></li>
+    </ul></div>
+    <div><h5>Downloads</h5><ul>
+      <li><a href="https://github.com/kobraop9517/bakup-releases/releases/latest">Latest release</a></li>
+      <li><a href="https://hub.docker.com/r/kobraop9517/backup">Server image (Docker Hub)</a></li>
+      <li><a href="https://github.com/kobraop9517/bakup-releases/issues">Support / Issues</a></li>
+    </ul></div>
+    <div><h5>Legal</h5><ul>
+      <li><a href="https://github.com/kobraop9517/bakup-releases/blob/main/LICENSE">License</a></li>
+    </ul></div>
+  </div>
+  <p class="legal">© 2026 bakup — free to use, forever self-hosted.</p>
+</div></footer>
+
+<script>
+function cp(btn,id){
+  const text=document.getElementById(id).innerText
+    .split('\n').map(l=>l.replace(/^\$ |^PS> /,'')).join('\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='copied!';setTimeout(()=>btn.textContent='copy',1500);
+  });
+}
+// 3D tilt on the tool icons — follows the cursor, springs back on leave
+document.querySelectorAll('.tilt').forEach(el=>{
+  el.addEventListener('mousemove',e=>{
+    const r=el.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5, y=(e.clientY-r.top)/r.height-.5;
+    el.style.transform=`rotateY(${(x*24).toFixed(1)}deg) rotateX(${(-y*24).toFixed(1)}deg)`;
+  });
+  el.addEventListener('mouseleave',()=>{el.style.transform='';});
+});
+// click pulse on every interactive icon
+document.querySelectorAll('.tilt,.hicon').forEach(el=>{
+  el.addEventListener('click',()=>{
+    el.classList.remove('pulse');void el.offsetWidth;el.classList.add('pulse');
+  });
+});
+// mobile menu
+function toggleMenu(){document.getElementById('mmenu').classList.toggle('open');}
+function closeMenu(){document.getElementById('mmenu').classList.remove('open');}
+
+/* ================= guided setup wizard ================= */
+const STEP_SERVER={t:"Set up your server — once",d:"On the machine that will store the backups: a NAS, an old PC, a Raspberry Pi, a $5 VPS.",
+  lbl:"on the server",
+  cmd:'$ mkdir bakup-server && cd bakup-server\n$ curl -LO https://github.com/kobraop9517/bakup-releases/releases/latest/download/docker-compose.yml\n$ docker compose up -d\n$ docker compose logs bakup-server\n[bakup] FIRST RUN — generated your access token:\n    9f2c41a8be6d…   <- save this',
+  cards:[
+    {k:"WARNING",c:"Anyone holding this token can read and write every backup. Treat it exactly like a password.",cls:"warn"},
+    {k:"DO",c:"The server generates the token itself on first run — copy it from the logs into a password manager. Retrieve anytime: docker exec bakup-server cat /data/.bakup_token",cls:"do"},
+    {k:"DON'T",c:"Never paste the token into chats or screenshots.",cls:"dont"}]};
+const STEP_NET={t:"Check you can reach it",d:"From your everyday computer, hit the health endpoint.",
+  lbl:"on your computer",
+  cmd:'$ curl http://SERVER-IP:8000/health\n{"ok":true}',
+  cards:[
+    {k:"DO",c:"Away from home a lot? A mesh VPN (Tailscale, WireGuard) makes the server reachable from anywhere, safely.",cls:"do"},
+    {k:"DON'T",c:"Don't port-forward 8000 to the open internet — traffic is plain HTTP and the token travels in cleartext.",cls:"dont"}]};
+const STEP_INSTALL={
+  linux:{t:"Install the client — Linux",d:"A native .deb; apt resolves the dependencies for you.",
+    lbl:"bash",
+    cmd:'$ curl -LO https://github.com/kobraop9517/bakup-releases/releases/latest/download/bakup_0.1.0_all.deb\n$ sudo apt install ./bakup_0.1.0_all.deb\n$ bakup --version\nbakup 0.1.0',
+    cards:[
+      {k:"DO",c:"Let apt pull python3 and python3-requests — that's the point of the .deb.",cls:"do"},
+      {k:"DON'T",c:"Don't sudo-pip anything. The package keeps your system Python untouched.",cls:"dont"}]},
+  win:{t:"Install the client — Windows",d:"One line in PowerShell, or the GUI setup wizard from the releases page.",
+    lbl:"PowerShell",
+    cmd:'PS> irm https://github.com/kobraop9517/bakup-releases/releases/latest/download/install.ps1 | iex\nPS> bakup --version\nbakup 0.1.0',
+    cards:[
+      {k:"WARNING",c:"Piping a script into your shell is powerful — skim install.ps1 first so you know exactly what it does. (It installs Python via winget if missing and adds bakup to PATH.)",cls:"warn"},
+      {k:"DO",c:"Prefer clicking? Download bakup-setup.exe instead — bundled exe, no Python needed.",cls:"do"}]},
+  pip:{t:"Install the client — macOS / anywhere",d:"Any OS with Python 3.9 or newer.",
+    lbl:"bash / zsh",
+    cmd:'$ pipx install https://github.com/kobraop9517/bakup-releases/releases/latest/download/bakup-0.1.0-py3-none-any.whl\n$ bakup --version\nbakup 0.1.0',
+    cards:[
+      {k:"DO",c:"Use pipx over pip — it isolates bakup from your other Python packages.",cls:"do"},
+      {k:"DON'T",c:"Don't run it on Python < 3.9 — check with python3 --version first.",cls:"dont"}]}};
+const STEP_CONFIG={t:"Configure — once per machine",d:"Point the client at your server. This serves every repo on this computer, forever.",
+  lbl:"one-time",
+  cmd:'$ bakup config --server http://SERVER-IP:8000 --token YOUR-TOKEN\nserver: http://SERVER-IP:8000   token: set',
+  cards:[
+    {k:"DO",c:"Use the exact token the server printed on first run (docker exec bakup-server cat /data/.bakup_token).",cls:"do"},
+    {k:"DON'T",c:"Don't drop the http:// or the :8000 port — the full URL matters.",cls:"dont"}]};
+const STEP_FIRST={t:"Your first backup",d:"Inside any folder you care about — exactly like git.",
+  lbl:"any folder",
+  cmd:'$ cd ~/my-project\n$ bakup init\n$ bakup commit -m "first snapshot"\n$ bakup push',
+  cards:[
+    {k:"WARNING",c:"commit stores metadata only — file contents upload at push. If a file changes before you push, that committed version can't be recovered.",cls:"warn"},
+    {k:"DO",c:"Push soon after committing. Automate it: cron / Task Scheduler running commit + push.",cls:"do"},
+    {k:"DON'T",c:"Don't treat an unpushed ○ local commit as a backup — it isn't one yet.",cls:"dont"}]};
+const STEP_RESTORE={t:"Prove it works — restore",d:"A backup you've never restored is a hope, not a backup.",
+  lbl:"restore drill",
+  cmd:'$ bakup log\n$ bakup restore 20260706-031503 ./test-restore',
+  cards:[
+    {k:"DO",c:"Run this drill today, and again once a month.",cls:"do"},
+    {k:"DON'T",c:"Don't restore over the original folder — restore beside it and compare.",cls:"dont"}]};
+const STEP_DONE={t:"You're done 🎉",d:"Configured once — now you can enjoy the entire system on every machine you own.",
+  lbl:"setup complete",
+  cmd:'$ bakup status\nrepo \'my-project\' at ~/my-project\n  working tree clean — nothing to commit\n  server: connected ✓',
+  cards:[
+    {k:"DO",c:"Repeat only the install + config steps on your other computers — the server is already done.",cls:"do"}]};
+
+/* ---- server-side (docker) flow ---- */
+const SRV_INSTALL={t:"Install Docker on the server box",d:"Any machine you own works: an old PC, a NAS, a Raspberry Pi, a $5 VPS.",
+  lbl:"on the server",
+  cmd:'$ curl -fsSL https://get.docker.com | sh\n$ docker --version\nDocker version 27.x',
+  cards:[
+    {k:"DO",c:"On a Windows or macOS box, install Docker Desktop instead — everything after this step is identical.",cls:"do"},
+    {k:"WARNING",c:"Piping a script into your shell is powerful — skim get.docker.com first so you know what it does.",cls:"warn"}]};
+const SRV_START={t:"Download & start the server",d:"One compose file. The image pulls from Docker Hub — no source code, no build step.",
+  lbl:"docker compose",
+  cmd:'$ mkdir bakup-server && cd bakup-server\n$ curl -LO https://github.com/kobraop9517/bakup-releases/releases/latest/download/docker-compose.yml\n$ docker compose up -d',
+  cards:[
+    {k:"DO",c:"Prefer a one-liner? docker run -d --name bakup-server --restart unless-stopped -p 8000:8000 -v ./data:/data kobraop9517/backup:latest",cls:"do"},
+    {k:"DON'T",c:"Don't start two server instances on the same data folder.",cls:"dont"}]};
+const SRV_TOKEN={t:"Grab the auto-generated token",d:"On first run the server creates its own secret token and saves it in the data volume.",
+  lbl:"docker",
+  cmd:'$ docker compose logs bakup-server\n[bakup] FIRST RUN — generated your access token:\n    9f2c41a8be6d…   <- save this\n$ docker exec bakup-server cat /data/.bakup_token   # anytime later',
+  cards:[
+    {k:"WARNING",c:"Anyone holding this token can read and write every backup. Treat it exactly like a password.",cls:"warn"},
+    {k:"DO",c:"Copy it into a password manager — every client machine will need it once.",cls:"do"},
+    {k:"DON'T",c:"Never paste it into chats or screenshots.",cls:"dont"}]};
+const SRV_DISK={t:"Point storage at a big disk",d:"All backups live in the /data volume. Default is ./data next to the compose file.",
+  lbl:"docker-compose.yml",
+  cmd:'$ nano docker-compose.yml\n    volumes:\n      - /mnt/hdd/bakup:/data   # instead of ./data\n$ docker compose up -d       # apply',
+  cards:[
+    {k:"DO",c:"Change this before your first real backups — moving later means copying the whole store.",cls:"do"},
+    {k:"DON'T",c:"Don't delete the data folder — it holds every backup AND the token.",cls:"dont"}]};
+const SRV_NET={t:"Health & network",d:"Make sure clients on your network can reach it.",
+  lbl:"checks",
+  cmd:'$ curl http://localhost:8000/health\n{"ok":true}\n\n# from another computer on the LAN:\n$ curl http://SERVER-IP:8000/health\n{"ok":true}',
+  cards:[
+    {k:"DO",c:"Away from home a lot? A mesh VPN (Tailscale, WireGuard) makes the server reachable from anywhere, safely.",cls:"do"},
+    {k:"DON'T",c:"Don't port-forward 8000 to the open internet — traffic is plain HTTP and the token travels in cleartext.",cls:"dont"}]};
+const SRV_UPDATE={t:"Keep it running & updated",d:"restart: unless-stopped already survives reboots. Updating is two commands.",
+  lbl:"maintenance",
+  cmd:'$ docker compose pull && docker compose up -d   # update to latest image\n$ docker compose logs -f bakup-server           # watch activity',
+  cards:[
+    {k:"DO",c:"Pull updates now and then — your backups and token survive image upgrades (they live in the volume).",cls:"do"},
+    {k:"DON'T",c:"Never run docker compose down -v — the -v flag deletes the volume, i.e. every backup.",cls:"dont"}]};
+const SRV_DONE={t:"Server ready 🎉",d:"The storage side is done forever. Now install the client on each of your computers.",
+  lbl:"server up",
+  cmd:'$ docker ps --filter name=bakup-server\nCONTAINER ID   IMAGE                      STATUS\n1a2b3c4d5e6f   kobraop9517/backup:latest  Up (healthy)',
+  cards:[
+    {k:"DO",c:"Switch this guide to your client OS (Linux / Windows / macOS) for the other half of the setup.",cls:"do"}]};
+
+let gOS='linux', gIdx=0, typeToken=0;
+function gSteps(){
+  if(gOS==='docker') return [SRV_INSTALL,SRV_START,SRV_TOKEN,SRV_DISK,SRV_NET,SRV_UPDATE,SRV_DONE];
+  return [STEP_SERVER,STEP_NET,STEP_INSTALL[gOS],STEP_CONFIG,STEP_FIRST,STEP_RESTORE,STEP_DONE];
+}
+function setOS(os){
+  gOS=os; gIdx=0;
+  const map={linux:'on-linux',win:'on-win',pip:'on-pip',docker:'on-docker'};
+  ['linux','win','pip','docker'].forEach(o=>{
+    document.getElementById('os-'+o).className='pill os-pill'+(o===os?' '+map[o]:'');
+  });
+  gRender();
+}
+function gStep(dir){
+  const n=gSteps().length;
+  gIdx=Math.min(n-1,Math.max(0,gIdx+dir));
+  gRender();
+}
+function gRender(){
+  const steps=gSteps(), s=steps[gIdx], n=steps.length;
+  document.getElementById('g-eyebrow').textContent = gIdx===n-1 ? 'all set' : 'step '+(gIdx+1)+' of '+(n-1);
+  document.getElementById('g-title').textContent=s.t;
+  document.getElementById('g-desc').textContent=s.d;
+  document.getElementById('gterm-lbl').textContent=s.lbl;
+  document.getElementById('g-cards').innerHTML=s.cards.map(c=>
+    '<div class="gcard '+c.cls+'"><span class="k">'+c.k+'</span><p>'+c.c+'</p></div>').join('');
+  document.getElementById('g-back').style.visibility=gIdx===0?'hidden':'visible';
+  document.getElementById('g-next').textContent=gIdx===n-1?'Start over ↺':(gIdx===n-2?'Finish →':'Next →');
+  if(gIdx===n-1) document.getElementById('g-next').onclick=()=>{gIdx=0;gRender();document.getElementById('g-next').onclick=()=>gStep(1);};
+  document.getElementById('g-count').textContent=(gIdx+1)+' / '+n;
+  document.getElementById('g-bar').style.width=((gIdx+1)/n*100)+'%';
+  typeInto(s.cmd);
+}
+function typeInto(text){
+  const pre=document.getElementById('gterm-pre'), tok=++typeToken;
+  pre.innerHTML='';
+  const caret=document.createElement('span'); caret.className='gcaret';
+  const txt=document.createTextNode(''); pre.appendChild(txt); pre.appendChild(caret);
+  let i=0;
+  (function tick(){
+    if(tok!==typeToken) return;
+    if(i<text.length){
+      txt.textContent+=text[i++];
+      setTimeout(tick, text[i-1]==='\n'?160:14);
+    }
+  })();
+  pre.dataset.full=text;
+}
+function skipType(){
+  typeToken++;
+  const pre=document.getElementById('gterm-pre');
+  pre.innerHTML='';
+  const txt=document.createTextNode(pre.dataset.full||'');
+  const caret=document.createElement('span'); caret.className='gcaret';
+  pre.appendChild(txt); pre.appendChild(caret);
+}
+gRender();
+</script>
+</body>
+</html>
